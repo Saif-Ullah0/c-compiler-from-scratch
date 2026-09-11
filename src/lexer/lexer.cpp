@@ -75,13 +75,72 @@ std::vector<Token> Lexer::tokenize() {
 
         if (std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
             tokens.push_back(scanIdentifierOrKeyword());
-        } else {
-            // Phase 1: ignore numbers, strings, symbols, operators.
-            // Later phases will replace this else-branch with real scanners.
+        }
+        else if (std::isdigit(static_cast<unsigned char>(c)) ||
+                 (c == '.' && std::isdigit(static_cast<unsigned char>(peek(1))))) {
+            tokens.push_back(scanNumber());
+        }
+        else {
+            // Phase 4 will handle operators/separators
             advance();
         }
     }
 
     tokens.push_back(Token{TokenType::END_OF_FILE, "", line, col});
     return tokens;
+}
+
+bool Lexer::isHexDigit(char c) const {
+    return std::isdigit(static_cast<unsigned char>(c)) ||
+           (c >= 'a' && c <= 'f') ||
+           (c >= 'A' && c <= 'F');
+}
+
+Token Lexer::scanNumber() {
+    int startLine = line;
+    int startCol  = col;
+    std::string buf;
+    bool isFloat = false;
+
+    // ---- Hex path: 0x or 0X ----
+    if (peek() == '0' && (peek(1) == 'x' || peek(1) == 'X')) {
+        buf += advance();          // '0'
+        buf += advance();          // 'x' / 'X'
+        while (isHexDigit(peek())) {
+            buf += advance();
+        }
+        return Token{TokenType::INT_CONST, buf, startLine, startCol};
+    }
+
+    // ---- Consume integer digits ----
+    while (std::isdigit(static_cast<unsigned char>(peek()))) {
+        buf += advance();
+    }
+
+    // ---- Dot -> becomes float ----
+    if (peek() == '.') {
+        isFloat = true;
+        buf += advance();
+        while (std::isdigit(static_cast<unsigned char>(peek()))) {
+            buf += advance();
+        }
+    }
+
+    // ---- Exponent: e or E ----
+    if (peek() == 'e' || peek() == 'E') {
+        isFloat = true;
+        buf += advance();
+        if (peek() == '+' || peek() == '-') {
+            buf += advance();
+        }
+        while (std::isdigit(static_cast<unsigned char>(peek()))) {
+            buf += advance();
+        }
+    }
+
+    // ---- Classify ----
+    if (isFloat) {
+        return Token{TokenType::FLOAT_CONST, buf, startLine, startCol};
+    }
+    return Token{TokenType::INT_CONST, buf, startLine, startCol};
 }

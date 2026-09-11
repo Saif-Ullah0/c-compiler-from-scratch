@@ -13,10 +13,13 @@ private:
     size_t      pos;
     int         line;
     int         col;
+    
 
     char  peek(int offset = 0) const;
     char  advance();
     bool  isAtEnd() const;
     void  skipWhitespace();
     Token scanIdentifierOrKeyword();
+    bool isHexDigit(char c) const;
+    Token scanNumber();
 };
