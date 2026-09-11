@@ -74,7 +74,13 @@ std::vector<Token> Lexer::tokenize() {
 
         char c = peek();
 
-        if (std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
+        if (c == '/' && (peek(1) == '/' || peek(1) == '*')) {
+            tokens.push_back(scanComment());
+        }
+        else if (c == '#') {
+            tokens.push_back(scanPreprocessor());
+        }
+        else if (std::isalpha(static_cast<unsigned char>(c)) || c == '_') {
             tokens.push_back(scanIdentifierOrKeyword());
         }
         else if (std::isdigit(static_cast<unsigned char>(c)) ||
@@ -258,4 +264,42 @@ Token Lexer::scanOperatorOrSeparator() {
     }
 
     return Token{TokenType::UNKNOWN, one, startLine, startCol};
+}
+
+Token Lexer::scanComment() {
+    int startLine = line;
+    int startCol  = col;
+    std::string buf;
+
+    if (peek(1) == '/') {
+        buf += advance();
+        buf += advance();
+        while (!isAtEnd() && peek() != '\n') {
+            buf += advance();
+        }
+    } else {
+        buf += advance();
+        buf += advance();
+        while (!isAtEnd() && !(peek() == '*' && peek(1) == '/')) {
+            buf += advance();
+        }
+        if (!isAtEnd()) {
+            buf += advance();
+            buf += advance();
+        }
+    }
+
+    return Token{TokenType::COMMENT, buf, startLine, startCol};
+}
+
+Token Lexer::scanPreprocessor() {
+    int startLine = line;
+    int startCol  = col;
+    std::string buf;
+
+    while (!isAtEnd() && peek() != '\n') {
+        buf += advance();
+    }
+
+    return Token{TokenType::PREPROCESSOR, buf, startLine, startCol};
 }

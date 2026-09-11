@@ -25,4 +25,6 @@ private:
     Token scanString();
     Token scanChar();
     Token scanOperatorOrSeparator();
+    Token scanComment();
+    Token scanPreprocessor();
 };
