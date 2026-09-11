@@ -22,4 +22,6 @@ private:
     Token scanIdentifierOrKeyword();
     bool isHexDigit(char c) const;
     Token scanNumber();
+    Token scanString();
+Token scanChar();
 };

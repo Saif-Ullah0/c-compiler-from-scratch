@@ -1,6 +1,7 @@
 #include "lexer/lexer.h"
 #include "lexer/keyword_table.h"
 #include <cctype>
+#include <iostream>
 
 Lexer::Lexer(const std::string& source)
     : src(source), pos(0), line(1), col(1)
@@ -80,6 +81,12 @@ std::vector<Token> Lexer::tokenize() {
                  (c == '.' && std::isdigit(static_cast<unsigned char>(peek(1))))) {
             tokens.push_back(scanNumber());
         }
+        else if (c == '"') {
+            tokens.push_back(scanString());
+        }
+        else if (c == '\'') {
+            tokens.push_back(scanChar());
+        }
         else {
             // Phase 4 will handle operators/separators
             advance();
@@ -143,4 +150,62 @@ Token Lexer::scanNumber() {
         return Token{TokenType::FLOAT_CONST, buf, startLine, startCol};
     }
     return Token{TokenType::INT_CONST, buf, startLine, startCol};
+}
+
+Token Lexer::scanString() {
+    int startLine = line;
+    int startCol  = col;
+    std::string buf;
+
+    buf += advance();          // consume opening "
+
+    while (!isAtEnd() && peek() != '"') {
+        if (peek() == '\\') {
+            buf += advance();          // consume backslash
+            if (!isAtEnd()) {
+                buf += advance();      // consume escaped char
+            }
+        } else {
+            buf += advance();
+        }
+    }
+
+    if (!isAtEnd() && peek() == '"') {
+        buf += advance();      // consume closing "
+    } 
+    else {
+        std::cerr << "Warning: unterminated string at line "
+                  << startLine << "\n";
+    }
+    
+
+    return Token{TokenType::STRING_LITERAL, buf, startLine, startCol};
+}
+
+Token Lexer::scanChar() {
+    int startLine = line;
+    int startCol  = col;
+    std::string buf;
+
+    buf += advance();          // opening '
+
+    while (!isAtEnd() && peek() != '\'') {
+        if (peek() == '\\') {
+            buf += advance();          // backslash
+            if (!isAtEnd()) {
+                buf += advance();      // escaped char
+            }
+        } else {
+            buf += advance();
+        }
+    }
+
+    if (!isAtEnd() && peek() == '\'') {
+        buf += advance();      // closing '
+    } else {
+        std::cerr << "Warning: unterminated char at line "
+                  << startLine << "\n";
+    }
+
+    return Token{TokenType::CHAR_CONST, buf, startLine, startCol};
 }
