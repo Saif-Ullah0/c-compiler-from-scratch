@@ -88,8 +88,7 @@ std::vector<Token> Lexer::tokenize() {
             tokens.push_back(scanChar());
         }
         else {
-            // Phase 4 will handle operators/separators
-            advance();
+            tokens.push_back(scanOperatorOrSeparator());
         }
     }
 
@@ -208,4 +207,55 @@ Token Lexer::scanChar() {
     }
 
     return Token{TokenType::CHAR_CONST, buf, startLine, startCol};
+}
+
+Token Lexer::scanOperatorOrSeparator() {
+    int startLine = line;
+    int startCol  = col;
+
+    char c1 = peek();
+    char c2 = peek(1);
+    char c3 = peek(2);
+
+    if ((c1 == '<' && c2 == '<' && c3 == '=') ||
+        (c1 == '>' && c2 == '>' && c3 == '=')) {
+        std::string s;
+        s += advance();
+        s += advance();
+        s += advance();
+        return Token{TokenType::OPERATOR, s, startLine, startCol};
+    }
+
+    std::string two;
+    two += c1;
+    two += c2;
+
+    if (two == "+=" || two == "-=" || two == "*=" || two == "/=" ||
+        two == "%=" || two == "&=" || two == "|=" || two == "^=" ||
+        two == "==" || two == "!=" || two == "<=" || two == ">=" ||
+        two == "&&" || two == "||" || two == "<<" || two == ">>" ||
+        two == "++" || two == "--" || two == "->") {
+        std::string s;
+        s += advance();
+        s += advance();
+        return Token{TokenType::OPERATOR, s, startLine, startCol};
+    }
+
+    std::string one;
+    one += advance();
+
+    if (one == "(" || one == ")" || one == "{" || one == "}" ||
+        one == "[" || one == "]" || one == ";" || one == "," ||
+        one == ".") {
+        return Token{TokenType::SEPARATOR, one, startLine, startCol};
+    }
+
+    if (one == "+" || one == "-" || one == "*" || one == "/" ||
+        one == "%" || one == "=" || one == "<" || one == ">" ||
+        one == "!" || one == "&" || one == "|" || one == "^" ||
+        one == "~" || one == "?" || one == ":") {
+        return Token{TokenType::OPERATOR, one, startLine, startCol};
+    }
+
+    return Token{TokenType::UNKNOWN, one, startLine, startCol};
 }

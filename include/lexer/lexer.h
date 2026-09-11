@@ -23,5 +23,6 @@ private:
     bool isHexDigit(char c) const;
     Token scanNumber();
     Token scanString();
-Token scanChar();
+    Token scanChar();
+    Token scanOperatorOrSeparator();
 };
