@@ -94,7 +94,12 @@ std::vector<Token> Lexer::tokenize() {
             tokens.push_back(scanChar());
         }
         else {
-            tokens.push_back(scanOperatorOrSeparator());
+            Token t = scanOperatorOrSeparator();
+            if (t.type == TokenType::UNKNOWN) {
+                std::cerr << "Error: unknown character '" << t.lexeme
+                          << "' at line " << t.line << ", column " << t.column << "\n";
+            }
+            tokens.push_back(t);
         }
     }
 
@@ -148,6 +153,16 @@ Token Lexer::scanNumber() {
         while (std::isdigit(static_cast<unsigned char>(peek()))) {
             buf += advance();
         }
+    }
+
+    // ---- Suffix: f, F, l, L ----
+    if (peek() == 'f' || peek() == 'F') {
+        isFloat = true;
+        buf += advance();
+    } else if (peek() == 'l' || peek() == 'L') {
+        // L on int = long int; L on float = long double
+        // Both stay in their category
+        buf += advance();
     }
 
     // ---- Classify ----
