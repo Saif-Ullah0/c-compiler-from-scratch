@@ -6,6 +6,7 @@ g++ -std=c++14 -Wall -Wextra -Iinclude ^
     src\lexer\lexer.cpp ^
     src\lexer\keyword_table.cpp ^
     src\utils\file_io.cpp ^
+    src\parser\parser.cpp ^
     -o build\compiler.exe
 
 if %ERRORLEVEL% EQU 0 (
