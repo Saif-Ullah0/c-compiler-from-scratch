@@ -1,21 +1,14 @@
-PREPROCESSOR #include <stdio.h>
-PREPROCESSOR #define MAX 100
-COMMENT // This is a single-line comment
 KEYWORD int
-IDENTIFIER main
+KEYWORD main
 SEPARATOR (
 SEPARATOR )
 SEPARATOR {
-COMMENT /* Multi-line
-       comment here */
 KEYWORD int
-IDENTIFIER x
-OPERATOR =
-INT_CONST 42
+IDENTIFIER count
 SEPARATOR ;
-COMMENT // trailing comment
+KEYWORD if
+IDENTIFIER count
 KEYWORD return
-INT_CONST 0
 SEPARATOR ;
 SEPARATOR }
 END_OF_FILE 
