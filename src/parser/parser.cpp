@@ -27,17 +27,21 @@ void Parser::advance() {
 
 bool Parser::match(TokenType type) {
     if (tokens[currentIndex].type == type) {
+        log("[match type] " + tokens[currentIndex].lexeme);
         advance();
         return true;
     }
+    error("expected token type");
     return false;
 }
 
 bool Parser::matchLexeme(const std::string& lexeme) {
     if (tokens[currentIndex].lexeme == lexeme) {
+        log("[match] " + lexeme);
         advance();
         return true;
     }
+    error("expected '" + lexeme + "'");
     return false;
 }
 
@@ -56,58 +60,64 @@ void Parser::parse() {
     if (tokens[currentIndex].type != TokenType::END_OF_FILE) {
         error("extra tokens after program");
     }
-    std::cout << "Parse successful ✅\n";
+    std::cout << "Parse successful ,,,\n";
 }
 
 // ───────────── Parse Functions ─────────────
 
 void Parser::parseProgram() {
+    log("parseProgram"); indent++;
     matchLexeme("main");
     matchLexeme("shro");
     parseST_LIST();
     matchLexeme("khatam");
+    indent--;
 }
 
 void Parser::parseST_LIST() {
     TokenType t = current().type;
     std::string lex = current().lexeme;
-
     bool startsStmt =
         (t == TokenType::KEYWORD &&
          (lex == "agar" || lex == "jabtak" || lex == "nikal" || lex == "shro")) ||
         (t == TokenType::IDENTIFIER);
-
     if (startsStmt) {
+        log("parseST_LIST"); indent++;
         parseST();
         parseST_LIST();
+        indent--;
     }
-    // else: ε — stop
+    // else: ε — silent
 }
 
 void Parser::parseST() {
-    if (current().lexeme == "shro") {
-        parseCST();
-    } else {
-        parseSST();
-    }
+    log("parseST"); indent++;
+    if (current().lexeme == "shro") parseCST();
+    else                             parseSST();
+    indent--;
 }
 
 void Parser::parseSST() {
+    log("parseSST"); indent++;
     std::string lex = current().lexeme;
     if (lex == "agar")        parseAGAR();
     else if (lex == "jabtak") parseJAB();
     else if (lex == "nikal")  parseBRK();
     else if (current().type == TokenType::IDENTIFIER) parseAS();
     else error("expected statement");
+    indent--;
 }
 
 void Parser::parseCST() {
+    log("parseCST"); indent++;
     matchLexeme("shro");
     parseST_LIST();
     matchLexeme("khatam");
+    indent--;
 }
 
 void Parser::parseAGAR() {
+    log("parseAGAR"); indent++;
     matchLexeme("agar");
     matchLexeme("(");
     parseE();
@@ -116,19 +126,23 @@ void Parser::parseAGAR() {
     parseST_LIST();
     matchLexeme("khatam");
     parseMAGAR();
+    indent--;
 }
 
 void Parser::parseMAGAR() {
     if (current().lexeme == "magar") {
+        log("parseMAGAR"); indent++;
         advance();
         matchLexeme("shro");
         parseST_LIST();
         matchLexeme("khatam");
+        indent--;
     }
-    // else: ε — nothing
+    // else: ε — silent
 }
 
 void Parser::parseJAB() {
+    log("parseJAB"); indent++;
     matchLexeme("jabtak");
     matchLexeme("(");
     parseE();
@@ -136,55 +150,74 @@ void Parser::parseJAB() {
     matchLexeme("shro");
     parseST_LIST();
     matchLexeme("khatam");
+    indent--;
 }
 
 void Parser::parseAS() {
+    log("parseAS"); indent++;
     if (current().type != TokenType::IDENTIFIER)
         error("expected identifier");
+    log("[match id] " + current().lexeme);
     advance();
     matchLexeme("medalo");
     parseE();
     matchLexeme(";");
+    indent--;
 }
 
 void Parser::parseBRK() {
+    log("parseBRK"); indent++;
     matchLexeme("nikal");
     matchLexeme(";");
+    indent--;
 }
 
 void Parser::parseE() {
+    log("parseE"); indent++;
     parseT();
     parseEdash();
+    indent--;
 }
-
 void Parser::parseEdash() {
     std::string lex = current().lexeme;
     bool isOp = (lex == "+" || lex == "-" || lex == "*" || lex == "/" ||
                  lex == "==" || lex == "!=" || lex == "chota" || lex == "bara");
-
     if (isOp) {
+        log("parseEdash"); indent++;
+        log("[match op] " + lex);    // ← NEW LINE
         advance();
         parseT();
         parseEdash();
+        indent--;
     }
-    // else: ε — stop
 }
 
 void Parser::parseT() {
+    log("parseT"); indent++;
     TokenType t = current().type;
     if (t == TokenType::IDENTIFIER) {
+        log("[match id] " + current().lexeme);
         advance();
     } else if (t == TokenType::INT_CONST || t == TokenType::FLOAT_CONST) {
+        log("[match num] " + current().lexeme);
         advance();
     } else if (current().lexeme == "(") {
-        advance();
+        matchLexeme("(");
         parseE();
         matchLexeme(")");
     } else {
         error("expected ID, number, or (");
     }
+    indent--;
 }
 
 void Parser::parseC() {
-    parseT();   // C is same as T in our grammar 
+    // Same as T
+}
+
+void Parser::log(const std::string& msg) const {
+    for (int k = 0; k < indent; ++k) {
+        std::cout << "    ";
+    }
+    std::cout << msg << "\n";
 }

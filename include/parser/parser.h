@@ -28,7 +28,7 @@ private:
     void parseSST();
     void parseCST();
     void parseAGAR();
-    void parseMAGAR();      // ← renamed
+    void parseMAGAR();      
     void parseJAB();
     void parseAS();
     void parseBRK();
@@ -36,4 +36,7 @@ private:
     void parseEdash();
     void parseT();
     void parseC();
+
+    int  indent = 0;
+    void log(const std::string& msg) const;
 };
